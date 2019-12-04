@@ -3,6 +3,7 @@ import os
 import time
 
 import win32gui
+import win32con
 
 class Game:
     '''
@@ -21,6 +22,7 @@ class Game:
     def __init__(self):
         self.proc = subprocess.Popen([Game.FLASH_PATH, Game.BUB_TRUB_PATH])
         self.win_hwnd = self._wait_for_window()
+        self._win_always_on_top()
 
     def __enter__(self):
         return self
@@ -41,6 +43,11 @@ class Game:
 
             time.sleep(Game.WIN_POLL_RATE)
         return win
+    
+    def _win_always_on_top(self):
+        region = self.get_window_region()
+        region = (region['top'], region['left'], region['width'], region['height'])
+        win32gui.SetWindowPos(self.win_hwnd, win32con.HWND_TOPMOST, *region, 0)
     
     def get_window_region(self):
         '''
