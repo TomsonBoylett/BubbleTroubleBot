@@ -5,6 +5,7 @@ import cv2 as cv
 
 from bot.capture import Capture
 from bot.game import Game
+from bot.bot import Bot
 
 def main(args=None):
     with Game() as game:
@@ -12,8 +13,11 @@ def main(args=None):
             stream_game(capture)
 
 def stream_game(cap: Capture):
+    bot = Bot()
     while True:
-        image = np.array(cap.capture())
+        image = np.array(cap.capture())[:, :, :3]
+
+        bot.get_move(image)
 
         # Display the picture
         cv.imshow("OpenCV/Numpy normal", image)
