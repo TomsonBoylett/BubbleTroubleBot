@@ -1,16 +1,24 @@
 gravity = 0.3;
 
 balls = [
-  new Ball(0, 100, 10, gravity, 3, -5),
-  new Ball(200, 200, 10, gravity, 3, 0)
+  new Ball(0, 400, 10, gravity, 10, 0),
+  new Ball(0, 390, 10, gravity, 9, 0),
+  new Ball(0, 380, 10, gravity, 8, 0),
+  new Ball(0, 370, 10, gravity, 7, 0),
+  new Ball(0, 360, 10, gravity, 6, 0),
+  new Ball(0, 350, 10, gravity, 5, 0),
+  new Ball(0, 340, 10, gravity, 4, 0),
+  new Ball(0, 330, 10, gravity, 3, 0),
+  new Ball(0, 320, 10, gravity, 2, 0),
+  new Ball(0, 350, 30, gravity, 5, 0),
 ]
 
 player = new Player(300, 50);
 
-bot = new Bot(balls.length, 10, 6);
+bot = new Bot(balls.length, 60, 1);
 
 function setup() {
-  createCanvas(600, 300);
+  createCanvas(600, 600);
   frameRate(60);
 }
 
@@ -42,6 +50,8 @@ function draw() {
   player.draw();
 
   bot.update(balls);
-  fill('green');
-  bot.draw()
+  bot.calc_unsafe(player);
+  bot.generate_graph(player)
+  bot.movePlayer(player)
+  bot.draw(player)
 }

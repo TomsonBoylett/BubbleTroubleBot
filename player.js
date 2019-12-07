@@ -1,33 +1,33 @@
 class Player {
 
     constructor(x, s) {
-        self.x = x
-        self.s = s
-        self.speed = 5
+        this.x = x
+        this.s = s
+        this.speed = 5
     }
 
     draw() {
-        self.y = height - self.s;
-        square(self.x, self.y, self.s)
+        this.y = height - this.s;
+        square(this.x, this.y, this.s)
     }
 
     moveLeft() {
-        self.x -= self.speed
+        this.x -= this.speed
 
-        if (self.x < 0) {
-            self.x = 0
+        if (this.x < 0) {
+            this.x = 0
         }
     }
 
     moveRight() {
-        self.x += self.speed
+        this.x += this.speed
 
-        if (self.x > width - self.s) {
-            self.x = width - self.s
+        if (this.x > width - this.s) {
+            this.x = width - this.s
         }
     }
 
     collided(ball) {
-        return ball.collided(self)
+        return ball.collided(this)
     }
 }
