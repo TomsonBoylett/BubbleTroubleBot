@@ -1,24 +1,21 @@
 gravity = 0.3;
 
-balls = [
-  new Ball(0, 400, 10, gravity, 10, 0),
-  new Ball(0, 390, 10, gravity, 9, 0),
-  new Ball(0, 380, 10, gravity, 8, 0),
-  new Ball(0, 370, 10, gravity, 7, 0),
-  new Ball(0, 360, 10, gravity, 6, 0),
-  new Ball(0, 350, 10, gravity, 5, 0),
-  new Ball(0, 340, 10, gravity, 4, 0),
-  new Ball(0, 330, 10, gravity, 3, 0),
-  new Ball(0, 320, 10, gravity, 2, 0),
-  new Ball(0, 350, 30, gravity, 5, 0),
-]
+balls = []
 
-player = new Player(300, 50);
+for (let i = 0; i < 6; i++) {
+  balls.push(new Ball(rand(5, 95), rand(5, 50), 5, gravity, rand(-3, 3), rand(-3, 3)))
+}
 
-bot = new Bot(balls.length, 60, 1);
+player = new Player(50, 5);
+
+bot = new Bot(balls.length, 120, 1);
+
+function rand(a, b) {
+  return a + Math.random() * Math.abs(a - b + 1);
+}
 
 function setup() {
-  createCanvas(600, 600);
+  createCanvas(100, 100);
   frameRate(60);
 }
 
@@ -51,7 +48,6 @@ function draw() {
 
   bot.update(balls);
   bot.calc_unsafe(player);
-  bot.generate_graph(player)
   bot.movePlayer(player)
-  bot.draw(player)
+  // bot.draw(player)
 }

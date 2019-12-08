@@ -3,7 +3,7 @@ class Player {
     constructor(x, s) {
         this.x = x
         this.s = s
-        this.speed = 5
+        this.speed = 1
     }
 
     draw() {

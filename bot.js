@@ -75,12 +75,11 @@ class Bot {
                 }
             }
         }
-        // console.log(unsafe[0].filter(v => v).length)
         this.unsafe = unsafe
     }
 
-    generate_graph(player) {
-        var graph = createGraph();
+    generateGraph(player) {
+        let graph = createGraph();
 
         let offsets = [-player.speed, 0, player.speed]
 
@@ -94,8 +93,9 @@ class Bot {
                 let to = (ti + 1) + ',';
                 for (let o of offsets) {
                     let xo = x + o
+                    let weight = ((o == 0) ? 1 : 2)
                     if (0 <= xo && xo < width && !this.unsafe[ti + 1][xo]) {
-                        graph.addLink(from, to + xo)
+                        graph.addLink(from, to + xo, {weight: weight})
                     }
                 }
             }
@@ -104,19 +104,43 @@ class Bot {
         for(let x = 0; x < width; x++) {
             let from = (this.steps - 1) + ',' + x;
             let to = 'goal';
-            graph.addLink(from, to)
+            let center = Math.floor(width / 2)
+            graph.addLink(from, to, {weight: Math.abs(x - center)})
         }
 
+        this.graph = graph
+    }
+
+    findPath(player) {
         let playerNode = 0 + ',' + player.x
-        if (graph.hasNode(playerNode)) {
-            let pathFinder = ngraphPath.nba(graph);
-            let foundPath = pathFinder.find(0 + ',' + player.x, 'goal');
-            this.foundPath = foundPath
+        if (!this.graph.hasNode(playerNode)) {
+            return
         }
+        let pathFinder = ngraphPath.aStar(this.graph, {
+            oriented: true,
+            // We tell our pathfinder what should it use as a distance function:
+            distance(fromNode, toNode, link) {
+                // We don't really care about from/to nodes in this case,
+                // as link.data has all needed information:
+                return link.data.weight;
+            }
+        });
+        let foundPath = pathFinder.find(0 + ',' + player.x, 'goal');
+        this.foundPath = foundPath
+        return foundPath
     }
 
     movePlayer(player) {
-        let newX = this.foundPath[this.foundPath.length - 2].id.split(',')[1]
+        this.generateGraph(player)
+        let foundPath = this.findPath(player)
+        if (!foundPath) {
+            return
+        }
+        let node = foundPath[foundPath.length - 2]
+        if (!node) {
+            return
+        }
+        let newX = node.id.split(',')[1]
         if (newX < player.x) {
             player.moveLeft()
         }
@@ -136,16 +160,19 @@ class Bot {
             }
         }
 
-        for (let x = player.x - 20; x < player.x + 20; x++) {
+        for (let x = player.x - 5; x < player.x + 5; x++) {
             for (let y = this.steps - 1; y > this.steps - 3; y--) {
                 img.set(x, y, color('green'))
             }
         }
 
-        for (let node of this.foundPath) {
-            let pos = node.id.split(',')
-            img.set(pos[1], img.height - pos[0] - 1, color('red'))
+        if (this.foundPath) {
+            for (let node of this.foundPath) {
+                let pos = node.id.split(',')
+                img.set(pos[1], img.height - pos[0] - 1, color('red'))
+            }
         }
+        
         
 
         img.updatePixels();
