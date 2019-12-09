@@ -6,7 +6,7 @@ class Bot {
         this.steps = steps
         this.skip = skip
 
-        this.buffer = 5
+        this.buffer = 1
     }
 
     update(balls) {
@@ -105,7 +105,7 @@ class Bot {
             let from = (this.steps - 1) + ',' + x;
             let to = 'goal';
             let center = Math.floor(width / 2)
-            graph.addLink(from, to, {weight: Math.abs(x - center)})
+            graph.addLink(from, to, {weight: Math.abs(x - center) * 1000})
         }
 
         this.graph = graph
@@ -116,7 +116,7 @@ class Bot {
         if (!this.graph.hasNode(playerNode)) {
             return
         }
-        let pathFinder = ngraphPath.aStar(this.graph, {
+        let pathFinder = ngraphPath.nba(this.graph, {
             oriented: true,
             // We tell our pathfinder what should it use as a distance function:
             distance(fromNode, toNode, link) {
@@ -134,11 +134,11 @@ class Bot {
         this.generateGraph(player)
         let foundPath = this.findPath(player)
         if (!foundPath) {
-            return
+            return -1
         }
         let node = foundPath[foundPath.length - 2]
         if (!node) {
-            return
+            return -1
         }
         let newX = node.id.split(',')[1]
         if (newX < player.x) {
@@ -147,6 +147,8 @@ class Bot {
         else if (newX > player.x) {
             player.moveRight()
         }
+
+        return 1
     }
 
     draw(player) {
@@ -160,11 +162,13 @@ class Bot {
             }
         }
 
+        /*
         for (let x = player.x - 5; x < player.x + 5; x++) {
             for (let y = this.steps - 1; y > this.steps - 3; y--) {
                 img.set(x, y, color('green'))
             }
         }
+        */
 
         if (this.foundPath) {
             for (let node of this.foundPath) {
