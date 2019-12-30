@@ -1,29 +1,46 @@
-class Bot {
-    constructor(no_balls, steps, skip=1) {
-        this.balls = Array(no_balls).fill(0)
-                        .map(a => Array(steps))
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
 
+class Bot {
+    constructor(balls, steps, skip=1) {
+        this.balls_over_time = Array(balls.length).fill(0)
+									.map(a => Array(steps))
+		
         this.steps = steps
+		
         this.skip = skip
 
         this.buffer = 1
+		
+		this.time = 0
+		
+		this.first_update = true
     }
 
-    update(balls) {
-        if (balls.length != this.balls.length) {
-            return
-        }
+    update_balls() {
+		if (this.first_update) {
+			this.first_update = false
+			for (var bi = 0; bi < balls.length; bi++) {
+				let ball_clone = Object.assign(Object.create(Object.getPrototypeOf(balls[bi])), balls[bi]);
 
-        for (var bi = 0; bi < this.balls.length; bi++) {
-            let ball_clone = Object.assign(Object.create(Object.getPrototypeOf(balls[bi])), balls[bi]);
-
-            for (var ti = 0; ti < this.steps; ti++) {
-                this.balls[bi][ti] = {...ball_clone}
-                for (var si = 0; si < this.skip; si++) {
-                    ball_clone.update()
-                }
-            }
-        }
+				for (var ti = 0; ti < this.steps; ti++) {
+					this.balls_over_time[bi][ti] = Object.assign(Object.create(Object.getPrototypeOf(ball_clone)), ball_clone);
+					for (var si = 0; si < this.skip; si++) {
+						ball_clone.update()
+					}
+				}
+			}
+		}
+        this.time = (this.time + 1) % this.steps
+		let future_ti = mod(this.time - 1, this.steps)
+		let before_future_ti = mod(this.time - 2, this.steps)
+		for (var bi = 0; bi < this.balls_over_time.length; bi++) {
+			let ball_clone = Object.assign(Object.create(Object.getPrototypeOf(this.balls_over_time[bi][before_future_ti])), this.balls_over_time[bi][before_future_ti]);
+			ball_clone.update()
+			this.balls_over_time[bi][future_ti] = ball_clone
+		}
+		
     }
 
     calc_unsafe(player) {
@@ -36,21 +53,20 @@ class Bot {
             }
         }
         
-        for (var bi = 0; bi < this.balls.length; bi++) {
+        for (var bi = 0; bi < this.balls_over_time.length; bi++) {
             for (var ti = 0; ti < this.steps; ti++) {
-                let ball = this.balls[bi][ti]
+                let ball = this.balls_over_time[bi][(ti + this.time) % this.steps]
 
-                ball.r += this.buffer
-
+				let r = ball.r + this.buffer
                 let x1 = undefined
                 let x2 = undefined
 
                 if (ball.y >= player.y) {
-                    x1 = ball.x - ball.r
-                    x2 = ball.x + ball.r
+                    x1 = ball.x - r
+                    x2 = ball.x + r
                 }
                 else {
-                    let a = Math.pow(ball.r, 2) - Math.pow(player.y - ball.y, 2)
+                    let a = Math.pow(r, 2) - Math.pow(player.y - ball.y, 2)
 
                     if (a < 0) {
                         continue
@@ -131,6 +147,8 @@ class Bot {
     }
 
     movePlayer(player) {
+		this.update_balls()
+		this.calc_unsafe(player)
         this.generateGraph(player)
         let foundPath = this.findPath(player)
         if (!foundPath) {

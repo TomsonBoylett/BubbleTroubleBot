@@ -1,16 +1,16 @@
-canvasWidth = 100;
-canvasHeight = 200;
+canvasWidth = 200;
+canvasHeight = 400;
 gravity = 0.3;
 
 balls = []
 
 for (let i = 0; i < 10; i++) {
-  balls.push(new Ball(rand(0, canvasWidth), rand(canvasHeight * 0.5, canvasHeight * 0.9), rand(2, 5), gravity, rand(-3, 3), rand(-3, 3)))
+  balls.push(new Ball(rand(0, canvasWidth), rand(canvasHeight * 0.5, canvasHeight * 0.9), rand(5, 10), gravity, rand(-3, 3), rand(-3, 3)))
 }
 
-player = new Player(Math.floor(canvasWidth / 2), 5);
+player = new Player(Math.floor(canvasWidth / 2), 10);
 
-bot = new Bot(balls.length, 60, 1);
+bot = new Bot(balls, 60, 1);
 
 function rand(a, b) {
   return a + Math.random() * Math.abs(a - b + 1);
@@ -43,8 +43,6 @@ function draw() {
     b.draw();
   }
 
-  bot.update(balls);
-  bot.calc_unsafe(player);
   result = bot.movePlayer(player)
   bot.draw(player)
 
