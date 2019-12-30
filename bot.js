@@ -93,6 +93,10 @@ class Bot {
         }
         this.unsafe = unsafe
     }
+	
+	createKey(x, t) {
+		return x * this.steps + t
+	}
 
     generateGraph(player) {
         let graph = createGraph();
@@ -105,21 +109,21 @@ class Bot {
                     continue
                 }
 
-                let from = ti + ',' + x;
-                let to = (ti + 1) + ',';
+                let from = this.createKey(x, ti);
                 for (let o of offsets) {
                     let xo = x + o
+					let to = this.createKey(xo, ti + 1);
                     let weight = ((o == 0) ? 1 : 2)
                     if (0 <= xo && xo < width && !this.unsafe[ti + 1][xo]) {
-                        graph.addLink(from, to + xo, {weight: weight})
+                        graph.addLink(from, to, {weight: weight})
                     }
                 }
             }
         }
 
         for(let x = 0; x < width; x++) {
-            let from = (this.steps - 1) + ',' + x;
-            let to = 'goal';
+            let from = this.createKey(x, this.steps - 1);
+            let to = -1;
             let center = Math.floor(width / 2)
             graph.addLink(from, to, {weight: Math.abs(x - center) * 1000})
         }
@@ -128,7 +132,7 @@ class Bot {
     }
 
     findPath(player) {
-        let playerNode = 0 + ',' + player.x
+        let playerNode = this.createKey(player.x, 0)
         if (!this.graph.hasNode(playerNode)) {
             return
         }
@@ -141,7 +145,7 @@ class Bot {
                 return link.data.weight;
             }
         });
-        let foundPath = pathFinder.find(0 + ',' + player.x, 'goal');
+        let foundPath = pathFinder.find(playerNode, -1);
         this.foundPath = foundPath
         return foundPath
     }
@@ -158,7 +162,7 @@ class Bot {
         if (!node) {
             return -1
         }
-        let newX = node.id.split(',')[1]
+        let newX = Math.floor(node.id / this.steps)
         if (newX < player.x) {
             player.moveLeft()
         }
@@ -190,8 +194,9 @@ class Bot {
 
         if (this.foundPath) {
             for (let node of this.foundPath) {
-                let pos = node.id.split(',')
-                img.set(pos[1], img.height - pos[0] - 1, color('red'))
+                let x = Math.floor(node.id / this.steps)
+				let y = node.id % this.steps
+                img.set(x, img.height - y - 1, color('red'))
             }
         }
         
