@@ -3,32 +3,27 @@ function mod(n, m) {
 }
 
 class Bot {
-    constructor(balls, steps, skip=1) {
+    constructor(balls, steps) {
         this.balls_over_time = Array(balls.length).fill(0)
 									.map(a => Array(steps))
 		
         this.steps = steps
-		
-        this.skip = skip
 
         this.buffer = 1
 		
 		this.time = 0
 		
-		this.first_update = true
+        this.first_update = true
     }
 
     update_balls() {
 		if (this.first_update) {
-			this.first_update = false
 			for (var bi = 0; bi < balls.length; bi++) {
 				let ball_clone = Object.assign(Object.create(Object.getPrototypeOf(balls[bi])), balls[bi]);
 
 				for (var ti = 0; ti < this.steps; ti++) {
 					this.balls_over_time[bi][ti] = Object.assign(Object.create(Object.getPrototypeOf(ball_clone)), ball_clone);
-					for (var si = 0; si < this.skip; si++) {
-						ball_clone.update()
-					}
+					ball_clone.update()
 				}
 			}
 		}
@@ -43,55 +38,72 @@ class Bot {
 		
     }
 
+    calc_unsafe_ball(ti, bi, player) {
+        let ball = this.balls_over_time[bi][ti]
+    
+        let r = ball.r + this.buffer
+        let x1 = undefined
+        let x2 = undefined
+        let player_y = height - player.s
+
+        if (ball.y >= player_y) {
+            x1 = ball.x - r
+            x2 = ball.x + r
+        }
+        else {
+            let a = Math.pow(r, 2) - Math.pow(player_y - ball.y, 2)
+
+            if (a < 0) {
+                return
+            }
+
+            a = Math.sqrt(a)
+            
+            x1 = ball.x - a
+            x2 = ball.x + a
+        }
+
+        x1 -= player.s
+
+        x1 = min([max([x1, 0]), width - 1])
+        x2 = min([max([x2, 0]), width - 1])
+
+        x1 = Math.floor(x1)
+        x2 = Math.ceil(x2)
+        
+        for (var ui = x1; ui <= x2; ui++) {
+            this.unsafe[ti][ui] = true;
+        }
+    }
+
     calc_unsafe(player) {
-        let unsafe = Array(this.steps).fill(0)
-                        .map(a => Array(width).fill(false));
-        
-        for (var ti = 0; ti < unsafe.length; ti++) {
-            for (var ui = width - player.s; ui < width; ui++) {
-                unsafe[ti][ui] = true;
+        if (this.first_update) {
+            this.unsafe = Array(this.steps).fill(0)
+                            .map(a => Array(width).fill(false));
+            
+            for (var ti = 0; ti < this.unsafe.length; ti++) {
+                for (var ui = width - player.s; ui < width; ui++) {
+                    this.unsafe[ti][ui] = true;
+                }
             }
-        }
-        
-        for (var bi = 0; bi < this.balls_over_time.length; bi++) {
-            for (var ti = 0; ti < this.steps; ti++) {
-                let ball = this.balls_over_time[bi][(ti + this.time) % this.steps]
 
-				let r = ball.r + this.buffer
-                let x1 = undefined
-                let x2 = undefined
-
-                if (ball.y >= player.y) {
-                    x1 = ball.x - r
-                    x2 = ball.x + r
-                }
-                else {
-                    let a = Math.pow(r, 2) - Math.pow(player.y - ball.y, 2)
-
-                    if (a < 0) {
-                        continue
-                    }
-
-                    a = Math.sqrt(a)
-                    
-                    x1 = ball.x - a
-                    x2 = ball.x + a
-                }
-
-                x1 -= player.s
-
-                x1 = min([max([x1, 0]), width - 1])
-                x2 = min([max([x2, 0]), width - 1])
-
-                x1 = Math.round(x1)
-                x2 = Math.round(x2)
-                
-                for (var ui = x1; ui <= x2; ui++) {
-                    unsafe[ti][ui] = true;
+            for (var bi = 0; bi < this.balls_over_time.length; bi++) {
+                for (var ti = 0; ti < this.steps; ti++) {
+                    this.calc_unsafe_ball(ti, bi, player);
                 }
             }
         }
-        this.unsafe = unsafe
+        else {
+            let future_ti = mod(this.time - 1, this.steps)
+
+            for (var xi = 0; xi < width - player.s; xi++) {
+                this.unsafe[future_ti][xi] = false;
+            }
+
+            for (var bi = 0; bi < this.balls_over_time.length; bi++) {
+                this.calc_unsafe_ball(future_ti, bi, player)
+            }
+        }
     }
 	
 	createKey(x, t) {
@@ -170,6 +182,7 @@ class Bot {
             player.moveRight()
         }
 
+        this.first_update = false
         return 1
     }
 
