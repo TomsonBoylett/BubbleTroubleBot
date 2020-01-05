@@ -7,6 +7,7 @@ class Player {
     }
 
     draw() {
+        this.y = height - this.s
         square(this.x, this.y, this.s)
     }
 

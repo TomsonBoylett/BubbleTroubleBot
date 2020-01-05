@@ -14,6 +14,8 @@ class Bot {
 		this.time = 0
 		
         this.first_update = true
+
+        this.graph = createGraph();
     }
 
     update_balls() {
@@ -111,40 +113,66 @@ class Bot {
 	}
 
     generateGraph(player) {
-        let graph = createGraph();
-
         let offsets = [-player.speed, 0, player.speed]
+        if (this.first_update) {
+            for (var ti = 0; ti < this.steps - 1; ti++) {
+                for(var x = 0; x < width; x++) {
+                    if (this.unsafe[ti][x]) {
+                        continue
+                    }
 
-        for (var ti = 0; ti < this.steps - 1; ti++) {
-            for(var x = 0; x < width; x++) {
-                if (this.unsafe[ti][x]) {
-                    continue
-                }
-
-                let from = this.createKey(x, ti);
-                for (let o of offsets) {
-                    let xo = x + o
-					let to = this.createKey(xo, ti + 1);
-                    let weight = ((o == 0) ? 1 : 2)
-                    if (0 <= xo && xo < width && !this.unsafe[ti + 1][xo]) {
-                        graph.addLink(from, to, {weight: weight})
+                    let from = this.createKey(x, ti);
+                    for (let o of offsets) {
+                        let xo = x + o
+                        let to = this.createKey(xo, ti + 1);
+                        let weight = ((o == 0) ? 1 : 2)
+                        if (0 <= xo && xo < width && !this.unsafe[ti + 1][xo]) {
+                            this.graph.addLink(from, to, {weight: weight})
+                        }
                     }
                 }
             }
-        }
 
-        for(let x = 0; x < width; x++) {
-            let from = this.createKey(x, this.steps - 1);
-            let to = -1;
-            let center = Math.floor(width / 2)
-            graph.addLink(from, to, {weight: Math.abs(x - center) * 1000})
+            for(let x = 0; x < width; x++) {
+                let from = this.createKey(x, this.steps - 1);
+                let to = -1;
+                let center = Math.floor(width / 2)
+                this.graph.addLink(from, to, {weight: Math.abs(x - center) * 1000})
+            }
         }
+        else {
+            this.graph.removeNode(-1);
 
-        this.graph = graph
+            let future_ti = mod(this.time - 1, this.steps)
+            let before_future_ti = mod(this.time - 2, this.steps)
+
+            for(var x = 0; x < width; x++) {
+                this.graph.removeNode(this.createKey(x, future_ti))
+
+                if (this.unsafe[before_future_ti][x]) {
+                    continue
+                }
+                
+                let to = this.createKey(x, future_ti);
+                for (let o of offsets) {
+                    let xo = x + o
+                    let from = this.createKey(xo, before_future_ti);
+                    let weight = ((o == 0) ? 1 : 2)
+                    if (0 <= xo && xo < width && !this.unsafe[future_ti][xo]) {
+                        this.graph.addLink(from, to, {weight: weight})
+                    }
+                }
+
+                let from = this.createKey(x, future_ti);
+                to = -1;
+                let center = Math.floor(width / 2)
+                this.graph.addLink(from, to, {weight: Math.abs(x - center) * 1000})
+            }
+        }
     }
 
     findPath(player) {
-        let playerNode = this.createKey(player.x, 0)
+        let playerNode = this.createKey(player.x, this.time)
         if (!this.graph.hasNode(playerNode)) {
             return
         }
@@ -187,7 +215,6 @@ class Bot {
     }
 
     draw(player) {
-        
         let img = createImage(width, this.steps);
         img.loadPixels();
         
