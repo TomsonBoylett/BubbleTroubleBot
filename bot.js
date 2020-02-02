@@ -29,7 +29,6 @@ class Bot {
 				}
 			}
 		}
-        this.time = (this.time + 1) % this.steps
 		let future_ti = mod(this.time - 1, this.steps)
 		let before_future_ti = mod(this.time - 2, this.steps)
 		for (var bi = 0; bi < this.balls_over_time.length; bi++) {
@@ -176,7 +175,7 @@ class Bot {
         if (!this.graph.hasNode(playerNode)) {
             return
         }
-        let pathFinder = ngraphPath.nba(this.graph, {
+        let pathFinder = ngraphPath.aStar(this.graph, {
             oriented: true,
             // We tell our pathfinder what should it use as a distance function:
             distance(fromNode, toNode, link) {
@@ -194,6 +193,10 @@ class Bot {
 		this.update_balls()
 		this.calc_unsafe(player)
         this.generateGraph(player)
+
+        this.first_update = false
+        this.time = (this.time + 1) % this.steps
+
         let foundPath = this.findPath(player)
         if (!foundPath) {
             return -1
@@ -209,8 +212,6 @@ class Bot {
         else if (newX > player.x) {
             player.moveRight()
         }
-
-        this.first_update = false
         return 1
     }
 

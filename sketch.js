@@ -1,24 +1,40 @@
 canvasWidth = 200;
 canvasHeight = 400;
-gravity = 0.3;
+gravity = 0.5;
 
 balls = []
+player = null
+bot = null
 
-for (let i = 0; i < 10; i++) {
-  balls.push(new Ball(rand(0, canvasWidth), rand(canvasHeight * 0.5, canvasHeight * 0.9), rand(5, 10), gravity, rand(-3, 3), rand(-3, 3)))
+no_of_balls = 10
+
+function intialise_game_state() {
+  balls = []
+
+  for (let i = 0; i < no_of_balls; i++) {
+    balls.push(new Ball(rand(0, canvasWidth), rand(canvasHeight * 0.5, canvasHeight * 0.9), 2, gravity, rand(-3, 3), rand(-3, 3)))
+  }
+
+  player = new Player(Math.floor(canvasWidth / 2), 10);
+
+  bot = new Bot(balls, 120, 1);
 }
-
-player = new Player(Math.floor(canvasWidth / 2), 10);
-
-bot = new Bot(balls, 60, 1);
 
 function rand(a, b) {
   return a + Math.random() * Math.abs(a - b + 1);
 }
 
 function setup() {
+  intialise_game_state()
+
   createCanvas(canvasWidth, canvasHeight);
-  frameRate(30);
+  frameRate(15);
+
+  let no_of_balls_input = createInput('Number of Balls');
+  no_of_balls_input.input(function(){
+    no_of_balls = parseInt(this.value())
+    intialise_game_state()
+  })
 }
 
 function draw() {
